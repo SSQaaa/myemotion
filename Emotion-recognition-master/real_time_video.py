@@ -31,7 +31,7 @@ except:
 camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-camera.set(cv2.CAP_PROP_FPS, 30)
+#camera.set(cv2.CAP_PROP_FPS, 30)
 
 if not camera.isOpened():
     raise RuntimeError("Camera open failed")
