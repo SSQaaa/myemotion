@@ -59,7 +59,7 @@ def fingers(results):
             # print(totalFingers)
             #cv2.putText(frame, str(totalFingers), (45, 375), cv2.FONT_HERSHEY_PLAIN, 10, (255, 0, 0), 25)
         all_fingers.append(fingers)
-    print(all_fingers)
+    #print(all_fingers)
     return all_fingers
         
 while True:
@@ -78,15 +78,23 @@ while True:
     if results.multi_hand_landmarks:
         if [1, 0, 0, 0, 0] in fingers(results):
             cv2.putText(frame, 'Thumbs_UP', (45, 375), cv2.FONT_HERSHEY_PLAIN, 10, (255, 0, 0), 25)
+        elif [0, 1, 1, 0, 0] in fingers(results):
+            cv2.putText(frame, 'Victory', (45, 375), cv2.FONT_HERSHEY_PLAIN, 10, (255, 0, 0), 25)
+        elif [1, 1, 1, 1, 1] in fingers(results):
+            cv2.putText(frame, 'Hi', (45, 375), cv2.FONT_HERSHEY_PLAIN, 10, (255, 0, 0), 25)
+        elif [0, 0, 0, 0, 0] in fingers(results):
+            cv2.putText(frame, 'Fighting', (45, 375), cv2.FONT_HERSHEY_PLAIN, 10, (255, 0, 0), 25)
+
         for handLms in results.multi_hand_landmarks:
             mpDraw.draw_landmarks(frame, handLms, mpHands.HAND_CONNECTIONS, handlmsStyles, handconStyles)
 
     cTime = time.time()
     fps = 1 / (cTime - pTime)
+    print(fps)
     pTime = cTime
     cv2.putText(frame, f'FPS: {int(fps)}', (400, 70), cv2.FONT_HERSHEY_PLAIN, 3, (0, 255, 0), 3)
     # Display the frame
-    cv2.imshow('MediaPipe Face Detection', frame)
+    #cv2.imshow('MediaPipe Detection', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
