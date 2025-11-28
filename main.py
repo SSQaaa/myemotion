@@ -337,12 +337,18 @@ def find_max(lst):
 
 data_arr = []
 frame_count = 0
-last_send_time = 0
-send_cooldown = 5.0  # 单位：秒
+timers = {
+    "send": 0,
+    "neutral": time.time(),
+    "emotion_none": time.time()
+}
 last_type = 0
-
-
-
+current_time = 0
+noface_flag = 0
+# last_send_time = 0
+# send_cooldown = 5.0  # 单位：秒
+# last_send_netrual_time = 0
+# last_send_emotion_time = 0
 
 if __name__ == '__main__':
     serial_comm = SerialComm()
@@ -351,6 +357,7 @@ if __name__ == '__main__':
     emotion_detector = EmotionDetector(serial_comm)
     while True:
         cTime = time.time()
+        current_time = time.time()
         fps = 1 / (cTime - pTime + 1e-6)
         frame = frame_grabber.get_frame()
         frame_for_gesture = frame.copy()
@@ -376,12 +383,23 @@ if __name__ == '__main__':
             data_byte = 0x02
         elif emotion == "happy":
             data_byte = 0x05
-        elif emotion == "neutral":
-            if current_time - last_send_time >= 30.0:  # 中性情绪30秒发送一次
+
+        # neutral 情绪30秒冷却
+        if emotion == "neutral":
+            if current_time - timers["neutral"] >= 30.0:
                 data_byte = 0x06
-                last_send_time = current_time
+                timers["neutral"] = current_time
             else:
                 data_byte = 0x00
+
+        # 无情绪10秒冷却
+        if emotion is None:
+            if current_time - timers["emotion_none"] >= 10.0:
+                data_byte = 0x07
+                serial_comm.send(data_byte)
+                print(data_byte)
+                timers["emotion_none"] = current_time
+                noface_flag = 1
 
         if gesture is not None or emotion is not None:
             data_arr.append(data_byte)
@@ -395,15 +413,19 @@ if __name__ == '__main__':
     
         if frame_count == 30:
             current_time = time.time()
-            if current_time - last_send_time >= send_cooldown:
+            if current_time - timers["send"] >= 5.0:
                 (data_final, cnt) = find_max(data_arr)
+                if cnt >= 15 or noface_flag == 1:
+                    noface_flag = 0
+                    data_final = 0x08
+                    serial_comm.send(data_final)
+                    print(data_final)
                 if cnt >= 15 and data_final != last_type:   # 至少15帧检测到且不等于上次发送，没有检测到就不发送
                   last_type = data_final
                   if data_final != 0x00:
                     serial_comm.send(data_final)
                     print(data_final)
-                    # print(f"[SEND] {data_final} at {time.strftime('%H:%M:%S')}")
-                    last_send_time = current_time  # 记录上次发送时间
+                    timers["send"] = current_time  # 记录上次发送时间
                 else:
                     print("not enough")
             else:
