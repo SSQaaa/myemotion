@@ -377,9 +377,11 @@ if __name__ == '__main__':
         elif emotion == "happy":
             data_byte = 0x05
         elif emotion == "neutral":
-            data_byte = 0x06
-        else:
-            data_byte = 0x00    
+            if current_time - last_send_time >= 30.0:  # 中性情绪30秒发送一次
+                data_byte = 0x06
+                last_send_time = current_time
+            else:
+                data_byte = 0x00
 
         if gesture is not None or emotion is not None:
             data_arr.append(data_byte)
