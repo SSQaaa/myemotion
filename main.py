@@ -340,7 +340,8 @@ frame_count = 0
 timers = {
     "send": 0,
     "neutral": time.time(),
-    "emotion_none": time.time()
+    "emotion_none": time.time(),
+    "same_type": time.time()
 }
 last_type = 0
 current_time = 0
@@ -392,9 +393,9 @@ if __name__ == '__main__':
             else:
                 data_byte = 0x00
 
-        # 无情绪10秒冷却
+        # 无情绪120秒冷却
         if emotion is None:
-            if current_time - timers["emotion_none"] >= 10.0:
+            if current_time - timers["emotion_none"] >= 120.0:
                 data_byte = 0x07
                 serial_comm.send(data_byte)
                 print(data_byte)
@@ -415,7 +416,7 @@ if __name__ == '__main__':
             current_time = time.time()
             if current_time - timers["send"] >= 5.0:
                 (data_final, cnt) = find_max(data_arr)
-                if cnt >= 15 or noface_flag == 1:
+                if cnt >= 15 and noface_flag == 1 and emotion is not None:
                     noface_flag = 0
                     data_final = 0x08
                     serial_comm.send(data_final)
@@ -447,7 +448,12 @@ if __name__ == '__main__':
                 print("[RESET] ")
             data_arr = []
             frame_count = 0
-            
+       
+        # 20s重置相同类型计时器
+        if current_time - timers["same_type"] >= 20.0:
+            last_type = 0
+            timers["same_type"] = current_time
+            print("[SAME_TYPE_RESET]")
 
         if serial_comm.ser_51_4.in_waiting:
             data = serial_comm.ser_51_4.read(serial_comm.ser_51_4.in_waiting)
