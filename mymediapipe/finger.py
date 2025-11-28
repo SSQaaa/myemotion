@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import time
 import math
+import imutils
 
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
@@ -68,6 +69,7 @@ while True:
         break
 
     frame = cv2.flip(frame, 1)  # 1 表示水平翻转（镜像），0 表示垂直翻转，-1 表示水平垂直翻转
+    frame = imutils.resize(frame, width=300)
 
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -90,11 +92,11 @@ while True:
 
     cTime = time.time()
     fps = 1 / (cTime - pTime)
-    print(fps)
+    #print(fps)
     pTime = cTime
     cv2.putText(frame, f'FPS: {int(fps)}', (400, 70), cv2.FONT_HERSHEY_PLAIN, 3, (0, 255, 0), 3)
     # Display the frame
-    #cv2.imshow('MediaPipe Detection', frame)
+    cv2.imshow('MediaPipe Detection', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break

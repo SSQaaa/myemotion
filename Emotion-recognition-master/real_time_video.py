@@ -1,13 +1,16 @@
-from keras.preprocessing.image import img_to_array
+from tensorflow.keras.utils import img_to_array
 import imutils
 import cv2
 from keras.models import load_model
 import numpy as np
 import time
+import serial
+ 
+ser = serial.Serial('/dev/ttyS4', 115200, timeout=0.1)  # 或 /dev/ttyUSB0
 
 # parameters for loading data and images
-detection_model_path = 'haarcascade_files/haarcascade_frontalface_default.xml'
-emotion_model_path = 'models/_mini_XCEPTION.102-0.66.hdf5'
+detection_model_path = '/home/orangepi/Desktop/myemotion/Emotion-recognition-master/haarcascade_files/haarcascade_frontalface_default.xml'
+emotion_model_path = '/home/orangepi/Desktop/myemotion/Emotion-recognition-master/models/_mini_XCEPTION.102-0.66.hdf5'
 
 # loading models
 face_detection = cv2.CascadeClassifier(detection_model_path)
@@ -50,7 +53,7 @@ while True:
         continue
 
     # ✅ 只在确认拿到帧后再 resize
-    frame = imutils.resize(frame, width=300)
+    # frame = imutils.resize(frame, width=300)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     faces = face_detection.detectMultiScale(
@@ -74,14 +77,14 @@ while True:
         roi = img_to_array(roi)
         roi = np.expand_dims(roi, axis=0)
 
-        preds = emotion_classifier.predict(roi)[0]
+        preds = emotion_classifier.predict(roi, verbose=0)[0]
         label = EMOTIONS[preds.argmax()]
 
         # 画框与标签
         cv2.rectangle(frameClone, (fX, fY), (fX + fW, fY + fH), (0, 0, 255), 2)
         cv2.putText(frameClone, label, (fX, fY - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
-
+        
     # 概率条（无人脸时为全0，也会正常刷新）
     for i, (emotion, prob) in enumerate(zip(EMOTIONS, preds)):
         text = "{}: {:.2f}%".format(emotion, prob * 100)
@@ -92,7 +95,7 @@ while True:
 
     # 始终刷新窗口（不再因无人脸而 continue）
     cv2.imshow('your_face', frameClone)
-    cv2.imshow("Probabilities", canvas)
+    # cv2.imshow("Probabilities", canvas)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
