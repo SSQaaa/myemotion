@@ -13,7 +13,7 @@ from collections import Counter
 
 pTime = 0
 cTime = 0
-imshow_flag = True
+imshow_flag = False
 
 # =================================================== 串口发送设置 =========================================================================
 class SerialComm:
@@ -51,19 +51,6 @@ class SerialComm:
                     #self.ser_51_4.write(packet_4)
                     self.ser_mipi_3.write(packet_3.encode("utf-8"))
                     # print(data_byte)
-                # else:
-                #     if current_time - self.last_time > self.mytimeout:
-                #         self.last_type = data_byte
-                #         self.last_time = current_time
-                #         packet_4 = bytes([0x55, 0x55, data_byte, 0x55, 0x55])
-                #         packet_0 = chr(data_byte + 0x30)   # 0x30 是字符 '0' 的 ASCII 码
-                #         packet_3 = f"page {str(data_byte)}\n"
-                #         self.ser_32_4.write(packet_4)
-                #         self.ser_51_0.write(packet_0.encode("utf-8"))
-                #         self.ser_mipi_3.write(packet_3.encode("utf-8"))
-                #         print(data_byte)
-                       
-
 
             time.sleep(0.01)
             self.last_type = data_byte
@@ -392,6 +379,7 @@ if __name__ == '__main__':
                 timers["neutral"] = current_time
             else:
                 data_byte = 0x00
+        
 
         # 无情绪120秒冷却
         if emotion is None:
@@ -459,6 +447,19 @@ if __name__ == '__main__':
             data = serial_comm.ser_51_4.read(serial_comm.ser_51_4.in_waiting)
             serial_comm.ser_32_0.write(data)
             print(f"[S0] Forwarded: {data.hex()}")
+
+        # if serial_comm.ser_mipi_3.in_waiting:
+        #     data = serial_comm.ser_mipi_3.read(serial_comm.ser_mipi_3.in_waiting)
+        #     serial_comm.ser_51_4.write(str(data))
+        #     print(f"[MIPI] Forwarded: {data.hex()}")
+        if serial_comm.ser_mipi_3.in_waiting:
+            data = serial_comm.ser_mipi_3.read(serial_comm.ser_mipi_3.in_waiting)
+            # print("RAW:", data)
+            # print("HEX:", data.hex())
+            # print("DEC:", list(data))
+            serial_comm.ser_51_4.write(data)
+            print(f"[MIPI] Forwarded: {data.hex()}")
+
 
         # -------------------- 串口发送 --------------------
 
