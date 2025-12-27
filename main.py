@@ -109,8 +109,8 @@ class GestureDetector:
         mpHands = mp.solutions.hands
         self.hands = mpHands.Hands(static_image_mode=False,
                     max_num_hands=2,  # 识别手的最大数量
-                    min_detection_confidence=0.7,  # 识别置信度阈值
-                    min_tracking_confidence=0.7)  # 追踪置信度阈值，越低越灵敏，但也更容易误识别，越高的话重复检测的概率越大，越慢
+                    min_detection_confidence=0.8,  # 识别置信度阈值
+                    min_tracking_confidence=0.8)  # 追踪置信度阈值，越低越灵敏，但也更容易误识别，越高的话重复检测的概率越大，越慢
         self.mpDraw = mp.solutions.drawing_utils
         self.handlmsStyles = self.mpDraw.DrawingSpec(color=(0, 0, 255), thickness=5)
         self.handconStyles = self.mpDraw.DrawingSpec(color=(0, 255, 0), thickness=5)
@@ -253,7 +253,7 @@ class EmotionDetector:
                 frame = self.frame_queue.get(timeout=0.1)
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 faces = self.face_detection.detectMultiScale(
-                    gray, scaleFactor=1.05, minNeighbors=6, minSize=(60,60),
+                    gray, scaleFactor=1.05, minNeighbors=8, minSize=(60,60),  # 适当调整这些参数以优化检测效果
                     flags=cv2.CASCADE_SCALE_IMAGE
                 )
 
@@ -370,7 +370,7 @@ if __name__ == '__main__':
         elif gesture == "Fighting":
             data_byte = 0x02
         elif emotion == "happy":
-            data_byte = 0x05
+            data_byte = 0x02
 
         # neutral 情绪30秒冷却
         if emotion == "neutral":
@@ -400,16 +400,16 @@ if __name__ == '__main__':
             cv2.putText(frameClone, emotion, (fX, fY - 10),cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 255), 4)
             #emotion_detector.emotion = None  # 发送后清除，避免重复发送  
     
-        if frame_count == 30:
+        if frame_count == 20:
             current_time = time.time()
             if current_time - timers["send"] >= 5.0:
                 (data_final, cnt) = find_max(data_arr)
-                if cnt >= 15 and noface_flag == 1 and emotion is not None:
+                if cnt >= 10 and noface_flag == 1 and emotion is not None:
                     noface_flag = 0
                     data_final = 0x08
                     serial_comm.send(data_final)
                     print(data_final)
-                if cnt >= 15 and data_final != last_type:   # 至少15帧检测到且不等于上次发送，没有检测到就不发送
+                if cnt >= 10 and data_final != last_type:   # 至少15帧检测到且不等于上次发送，没有检测到就不发送
                   last_type = data_final
                   if data_final != 0x00:
                     serial_comm.send(data_final)
